@@ -1,9 +1,11 @@
-import streamlit as st
 import pandas as pd
 import numpy as np
 from tensorflow.keras.models import load_model
 import joblib
+from flask import Flask, request, jsonify
 import json
+
+app = Flask(__name__)
 
 # 定义逆变换函数
 def inverse_transform(scaler, data, n_features):
@@ -29,16 +31,16 @@ scaler_path = 'scaler.joblib'
 model = load_model(model_path)
 scaler = joblib.load(scaler_path)
 
-# Streamlit界面
-st.title("Power Generation Prediction")
-uploaded_file = st.file_uploader("Choose a JSON file", type="json")
-
-if uploaded_file is not None:
-    input_data_list = json.load(uploaded_file)
+@app.route('/predict', methods=['POST'])
+def predict():
+    input_data_list = request.json['input_data']
     input_data = pd.DataFrame(input_data_list)
     input_data['日期'] = pd.to_datetime(input_data['日期'])
     input_data['星期'] = input_data['日期'].dt.weekday
     input_data['天数'] = input_data['日期'].dt.dayofyear
     input_data = input_data.tail(15)
     predictions = predict_power_generation(input_data, model, scaler)
-    st.write("Predicted Power Generation:", predictions)
+    return jsonify(predictions.tolist())
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
