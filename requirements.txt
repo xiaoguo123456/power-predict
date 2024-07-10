@@ -1,6 +1,6 @@
 flask
 pandas
 numpy
-tensorflow
+tensorflow==2.11.0  # 选择一个稳定的版本
 joblib
 gunicorn
